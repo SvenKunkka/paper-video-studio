@@ -1,5 +1,7 @@
 """Draw the poster texture from the brief. Every letter is real type, so the shreds really are this poster.
 
+Modified by SvenKunkka, 2026-11-16: wrap CJK body text without requiring spaces.
+
     python scripts/poster.py        -> build/tex/poster.png (2400x3600), poster_plain.png, build/preview/poster.png
 
 The layout is fixed (the 3D shots are framed on it); the words, fonts, colours and the picture come from brief.json.
@@ -9,7 +11,7 @@ of body columns with a halftone picture, the small line again and the footer wor
 poster.png carries the accent band; poster_plain.png is the same poster without it, for the background ribbons in
 the cascade shot, so the accent stays on the hero ribbon only.
 """
-import os, sys, json
+import os, sys, json, re
 import numpy as np, cv2
 from PIL import Image, ImageDraw, ImageFont
 
@@ -123,7 +125,12 @@ class Poster:
         f = self.font(self.text, px)
         gap = 36
         cw = (x1 - x0 - gap * (ncol - 1)) / ncol
-        words = (self.br['text']['body'] + ' ').split() * 12
+        body = self.br['text']['body']
+        # Chinese paragraphs have no spaces: wrap at characters instead of overflowing a whole column.
+        cjk = bool(re.search(r'[\u3400-\u9fff]', body))
+        tokens = re.findall(r'[\u3400-\u9fff]|[A-Za-z0-9]+|[^\s]', body) if cjk else body.split()
+        words = tokens * 12
+        separator = '' if cjk else ' '
         k = seed * 37 % len(words)
         for c in range(ncol):
             cx = x0 + c * (cw + gap)
@@ -132,7 +139,7 @@ class Poster:
                 line = ''
                 while True:
                     wd = words[k % len(words)]
-                    t = (line + ' ' + wd).strip()
+                    t = (line + separator + wd).strip()
                     if d.textlength(t, font=f) > cw:
                         break
                     line, k = t, k + 1

@@ -4,3 +4,30 @@ out/
 __pycache__/
 *.pyc
 brief.local.json
+
+video_jobs/
+script_video_renderer_test/
+script_video_integration_test/
+文案制作视频.app/
+
+# Local tools, production records, and machine-specific setup.
+.tools/
+production/
+SCRIPT-VIDEO-QA.md
+SPEC-script-video.md
+setup-env.sh
+.DS_Store
+.env
+.env.*
+*.log
+
+# Web dependencies, build output, and downloaded model caches.
+node_modules/
+dist/
+.cache/
+.models/
+models/
+model_cache/
+model-cache/
+.huggingface/
+.hf_cache/

@@ -1,100 +1,104 @@
-# Shred
+# Paper Video Studio
 
-**A video template you set up by talking to your AI agent.** Your words, fonts and colours on a printed poster.
-The poster is ripped into strips, fed through a shredder and rebuilt line by line, with sound. You get an 8-second
-vertical loop, 1080×1920 at 60 fps, rendered as real paper in Blender.
+English · [中文](README.zh-CN.md)
 
-<p>
-  <a href="docs/demo.mp4"><img src="docs/cover.jpg" width="260" alt="Shred: the rebuilt poster"></a>
-  <a href="docs/demo.mp4"><img src="docs/ribbons.jpg" width="260" alt="Shred: the ribbon cascade"></a>
-</p>
+Turn a local TXT or Markdown script into a narrated vertical video with subtitles and paper-style motion. Keep the full body as narration while extracting titles and highlights for text, steps, comparison, and local-image scenes.
 
-▶ [Watch the demo (with sound)](docs/demo.mp4)
+**The macOS local edition is available. A web edition is under development and has not been released as a usable feature.** Local production uses Python, Pillow, ffmpeg, and macOS `say`. It needs no cloud API or API key and does not upload scripts or images. Installing dependencies may require internet access.
 
-## Make your own in one message
+This project extends [shred-kit](https://github.com/amirmushichge/shred-kit) by **Amir Mushich**. The original eight-second Blender paper-shred template remains available; see the [preserved template documentation](README.upstream.md). Blender is not required for the new script-to-video workflow.
 
-Open **Claude Code**, **Codex**, **Cursor** or any coding agent in an empty folder and say:
+## Features
 
-> Clone https://github.com/amirmushichge/shred-kit, read it and help me make my own version.
+- Read `.txt`, `.md`, and `.markdown` in UTF-8, UTF-8 BOM, or GB18030.
+- Preserve TXT literally; use Markdown headings on screen and read the body without presentation markup.
+- Time subtitles and scenes from the generated speech, with 1080 × 1920, 30 fps MP4 output by default.
+- Use paper-strip entrances with text, steps, comparison, or supplied local-image layouts.
+- Save source text, editable storyboards, narration, SRT, MP4, covers, previews, and check records.
+- Isolate jobs by content, settings, and image bytes, with integrity-checked caches.
 
-The repo includes a full playbook for the agent ([AGENTS.md](AGENTS.md)). The agent will:
+## Requirements and setup
 
-1. **Check your machine.** It looks for Python, Blender, ffmpeg and a GPU, and offers to install what's missing.
-2. **Brief you, one question at a time:**
-   - your lines, with the recommended length for each;
-   - fonts, with suggestions by mood (Swiss, tech, editorial, vintage, loud poster);
-   - a colour palette, or your brand colours;
-   - your picture;
-   - sound on or off;
-   - where you'll post it.
-3. **Show a preview.** The poster appears in seconds, and four real 3D frames in about a minute.
-4. **Estimate the render time on your machine,** then render and hand you the files.
+The local edition requires **macOS**, **Python 3.10+**, **Pillow**, **ffmpeg/ffprobe**, and an installed voice for the system `say` command. Chinese speech defaults to **Tingting**. Run `say -v '?'` to list installed voices; download a missing voice through macOS speech settings, or select another installed voice with `--voice`.
 
-## What you can change
+From the project directory:
 
-| | |
-|---|---|
-| **Words** | 7 lines: two small lines, the headline, a subline, giant cropped letters, the footer, and body text |
-| **Fonts** | any Google Fonts family by name, or your own .ttf/.otf |
-| **Colours** | paper, ink and one accent band. Dark paper with light ink works too |
-| **Picture** | any image, turned into a halftone that survives the shredder |
-| **Sound** | a designed track (rip, falling paper, shredder, 25 clicks), mixed to −14 LUFS, or off |
-
-The motion, camera, timing and edit are fixed and tuned together. That's what makes it a template.
-
-Same template, other briefs (preview quality):
-
-<img src="docs/variations.jpg" width="540" alt="Two posters: black paper with a serif, kraft with a grotesque">
-
-<img src="docs/black-paper-stills.jpg" width="720" alt="Black paper and Fraunces, four 3D preview frames">
-
-<img src="docs/kraft-preview.jpg" width="720" alt="Kraft paper, Space Grotesk and a cobalt band, five frames from the reel">
-
-## You'll need
-
-- **Blender 5.x** (tested with 5.2), free from blender.org.
-- **Python 3.10+** and **ffmpeg**.
-- **A GPU.** NVIDIA (OptiX/CUDA), AMD (HIP), Apple Silicon (Metal) or Intel (oneAPI) are picked automatically. CPU
-  works, but slowly.
-- **Render time.** A final render takes about 1 h 15 min on a laptop RTX 4070. A draft takes a quarter of that or less.
-  `kit.py estimate` measures your machine before you commit.
-
-## Without an agent
-
-```bash
-python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt   # Windows: .venv\Scripts\python
-python kit.py doctor                         # is everything installed?
-python kit.py fields                         # what can I change?
-python kit.py set text.headline "Ship"       # edit brief.json, one field at a time (or edit it by hand)
-python kit.py poster                         # build/preview/poster.png, in seconds
-python kit.py stills                         # four 3D frames, about a minute
-python kit.py estimate --quality final       # how long will it take here?
-python kit.py render --quality final --social
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install "pillow>=10"
 ```
 
-Outputs go to `out/`:
-- the master MP4;
-- social versions at 16 Mbit/s, 60 and 30 fps, plus two cover stills;
-- the sound as a WAV;
-- a frame-exact cue sheet, if you'd rather score it yourself.
+Install ffmpeg with its `ffprobe` companion. If Homebrew is already available:
 
-## How it's made
+```sh
+brew install ffmpeg
+```
 
-Everything is code:
-- `poster.py` draws the poster.
-- `shred.py` builds and animates the scene in Blender:
-  - strip geometry with a paper shader (ink, fibre, translucency, cut edges);
-  - a ribbon cascade with height-map stacking, so paper never passes through paper;
-  - a shredder with cutter discs, and one Hermite camera move;
-  - true motion blur from averaged sub-frames.
-- `edit.py` cuts the shots and finishes the frames: grade, glow, grain and punches.
-- `sound.py` builds the sound from the render's own timings, so the sound follows any text you put in.
+The full `requirements.txt` and Blender are needed only for the original template; follow [README.upstream.md](README.upstream.md) for that workflow.
 
-## License
+## Choose a script
 
-- **Code:** GPL-3.0 (it drives Blender, which is GPL).
-- **Sound recordings** in `assets/sound`: public domain (see [SOURCES.md](assets/sound/SOURCES.md)).
-- **Demo picture:** the author's own render, free to use in videos made with this kit.
-- **Your videos are yours,** to use however you like, commercially included.
+Build the native file-picker helper on your Mac:
 
-Made by Amir Mushich.
+```sh
+.venv/bin/python script_video/build_native_launcher.py
+```
+
+Double-click **文案制作视频.app** in the project directory and select a script. A completed video opens in the default player and is revealed in Finder. The alternate **选择文案制作视频.command** entry shows progress in a window. The generated app uses a local ad-hoc signature and runs beside this project's `.venv` and `video.py`; it is not a standalone installer.
+
+Native helper compilation, process startup, and launcher call behavior have been checked. A complete manual click-through from the file picker to the opened video is still unverified. The command-line entry below runs the verified production pipeline directly.
+
+## Command-line workflow
+
+```sh
+.venv/bin/python video.py make examples/文案示例.md
+.venv/bin/python video.py make examples/微动开关文案.txt
+.venv/bin/python video.py make examples/文案示例.md --preview
+.venv/bin/python video.py make examples/文案示例.md --voice Tingting --rate 240
+```
+
+`--preview` generates speech, storyboards, and still previews without exporting an MP4. To review or edit a storyboard before rendering:
+
+```sh
+.venv/bin/python video.py plan examples/文案示例.md --out storyboard.json
+.venv/bin/python video.py render storyboard.json
+```
+
+Edit scene titles, layout kinds, and display items while keeping the complete narration. To change narration, edit the source script and plan it again. Outputs live in isolated folders under `video_jobs/`; `--output-base` selects another location.
+
+## Scripts and images
+
+Use blank lines to separate ideas. Markdown also supports headings, lists, tables, and local images:
+
+```markdown
+# A small mechanism
+
+## A clear explanation
+
+Your supplied narration stays in the video.
+
+![Diagram](images/switch.png)
+```
+
+Relative image paths resolve from the script's directory. Absolute paths also work. Image syntax is interpreted only in Markdown; TXT preserves it as literal text. Missing images, unsupported glyphs, or content that cannot fit its layout produce readable errors instead of silently cropping narration.
+
+## Scope and validation
+
+Different topics, local images, special-character paths, cache reuse, and content changes have been exercised through real renders, full video decoding, and automated tests. This workflow does not create arbitrary real product geometry or filmed footage from a script. Supply the required media or design and verify additional illustrations separately. Extracted highlights are not a substitute for fact-checking the supplied copy.
+
+The local workflow currently depends on macOS speech and native entry points; equivalent speech production has not been validated on Windows or Linux. The web edition is still in development, so this README does not claim browser production is available.
+
+## Project files
+
+| Path | Purpose |
+|---|---|
+| `video.py` | Plan, render, and launch the local workflow |
+| `script_video/` | Parsing, rendering, speech, and native launcher source |
+| `tests/` | Text integrity, job isolation, and launcher behavior tests |
+| `examples/` | Ready-to-use example scripts |
+| [Chinese user guide](使用说明-文案制作视频.md) | Detailed script and usage guidance |
+| [Upstream documentation](README.upstream.md) | The original Blender template |
+
+## License and attribution
+
+Code remains under **GNU GPL v3.0**; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for attribution and dated modifications. Preserve the upstream [sound source notice](assets/sound/SOURCES.md) and the demo-image permission in the original documentation. Input media, system components, and any source material incorporated in a video retain their own applicable rights.

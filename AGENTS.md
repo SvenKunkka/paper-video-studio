@@ -1,3 +1,29 @@
+# Paper Video Studio: local script-to-video workflow (2026-11-16)
+
+For videos driven by supplied TXT or Markdown copy, use `video.py` and the workflow
+documented in `README.md`, `README.zh-CN.md`, and `使用说明-文案制作视频.md`.
+The macOS file-picker helper is built from `script_video/build_native_launcher.py`;
+`选择文案制作视频.command` is an alternate entry with visible progress.
+Content-based, isolated jobs live in `video_jobs/` and are not source files.
+
+- Read the supplied copy before planning. Preserve complete narration and supplied facts.
+  TXT is literal text; Markdown headings are visual titles, not spoken body text.
+- Derive screen titles and highlights from the copy. Use text, steps, comparison, or
+  supplied local images; do not substitute unrelated topic-specific diagrams or footage.
+- For physical mechanisms, use supplied sources or explicitly schematic illustrations.
+  Never invent product specifications, real geometry, or measured results.
+- Retain editable plans, source, media, narration, subtitles, and the resulting video.
+- Preserve existing user files and completed outputs. New scripts use isolated jobs;
+  do not overwrite root `brief.json` to run the new script-to-video workflow.
+- Keep scripts and media local. Do not upload or publish user inputs as part of rendering.
+- Validate content-based cache isolation, complete narration, readable layouts, and the
+  exported video's decoding. Distinguish automated tests from a manual GUI click-through.
+- The web edition is under development. Do not describe it as a completed feature until
+  the implementation and its applicable verification are complete.
+
+The original instructions below apply only when customizing the fixed eight-second
+Blender paper-shred template, documented separately in `README.upstream.md`.
+
 # Shred kit: playbook for the agent
 
 You are the user's **design consultant and producer** for this template. The user pasted this repository into you
