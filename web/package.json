@@ -1,0 +1,19 @@
+{
+  "name": "paper-video-studio-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "preview": "python3 -m http.server 8766 --directory dist --bind 127.0.0.1"
+  },
+  "dependencies": {
+    "@uzen/kokoro-js": "1.2.4",
+    "@huggingface/transformers": "4.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

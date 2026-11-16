@@ -2,13 +2,41 @@
 
 English · [中文](README.zh-CN.md)
 
-Turn a local TXT or Markdown script into a narrated vertical video with subtitles and paper-style motion. Keep the full body as narration while extracting titles and highlights for text, steps, comparison, and local-image scenes.
+Turn a TXT or Markdown script into a narrated video with subtitles and paper-style motion. Keep the full body as narration while extracting titles and highlights for text, steps, comparison, and local-image scenes.
 
-**The macOS local edition is available. A web edition is under development and has not been released as a usable feature.** Local production uses Python, Pillow, ffmpeg, and macOS `say`. It needs no cloud API or API key and does not upload scripts or images. Installing dependencies may require internet access.
+**Choose the browser edition or the macOS local edition.** The browser edition generates Chinese speech with a model running on your device and records a video with Canvas, Web Audio, and MediaRecorder. The macOS edition uses Python, Pillow, ffmpeg, and the system `say` command. Neither workflow needs a paid synthesis API or uploads your scripts and image contents. Installing dependencies and downloading browser speech resources require network access.
 
 This project extends [shred-kit](https://github.com/amirmushichge/shred-kit) by **Amir Mushich**. The original eight-second Blender paper-shred template remains available; see the [preserved template documentation](README.upstream.md). Blender is not required for the new script-to-video workflow.
 
-## Features
+## Browser edition
+
+1. Paste a script, or choose a local `.txt`, `.md`, or `.markdown` file.
+2. Arrange the storyboard and edit each scene's title, complete narration, and layout. Add local images and associate them with scenes when needed.
+3. Generate Chinese speech locally, preview it, and export a video with burned-in subtitles.
+4. Download the video, SRT subtitles, storyboard JSON, and PNG cover before refreshing or leaving the page.
+
+Choose **9:16 portrait** or **16:9 landscape**, with **480p / 720p / 1080p** output. The recorder prefers **MP4** and falls back to **WebM** according to the browser's real encoder support; the download button and extension show the format actually produced. MP4 with H.264 video and AAC audio has been verified in a browser.
+
+The first Chinese speech request downloads approximately **370 MB** of model, voice, and runtime resources. Access to **Hugging Face** is required. Model inference stays in the browser; scripts and image contents are not sent to the model host. Model resources are cached subject to browser storage availability. A capable device and browser are needed; a local CPU fallback can be slower when WebGPU is unavailable.
+
+Keep the page **in the foreground during export**. Recording takes approximately the video's running time. Editing state and generated speech live in page memory and are cleared by refresh; download the outputs first. Cancelling discards pending results and stops subsequent work, although a model download or one inference call already running may finish internally.
+
+After changing the source script, arrange the storyboard again before editing its scenes. Changing narration, voice, or speed invalidates the corresponding audio. Browser images must be explicitly selected with **Add images** and linked to a scene; the browser does not read local image paths embedded in Markdown.
+
+### Build and serve the browser edition
+
+From the project root:
+
+```sh
+cd web
+npm ci
+npm run build
+python3 -m http.server 8080 --directory dist --bind 127.0.0.1
+```
+
+Open `http://localhost:8080`. The generated `web/dist/` can be served by an HTTPS static host. Python here is only an example static file server; browser production needs no Python rendering service, macOS voice, Blender, or API key. See [web/README.md](web/README.md) for detailed bilingual instructions and [THIRD_PARTY_TTS.md](THIRD_PARTY_TTS.md) for speech dependencies and model notices.
+
+## macOS local edition features
 
 - Read `.txt`, `.md`, and `.markdown` in UTF-8, UTF-8 BOM, or GB18030.
 - Preserve TXT literally; use Markdown headings on screen and read the body without presentation markup.
@@ -17,7 +45,7 @@ This project extends [shred-kit](https://github.com/amirmushichge/shred-kit) by 
 - Save source text, editable storyboards, narration, SRT, MP4, covers, previews, and check records.
 - Isolate jobs by content, settings, and image bytes, with integrity-checked caches.
 
-## Requirements and setup
+## macOS local setup
 
 The local edition requires **macOS**, **Python 3.10+**, **Pillow**, **ffmpeg/ffprobe**, and an installed voice for the system `say` command. Chinese speech defaults to **Tingting**. Run `say -v '?'` to list installed voices; download a missing voice through macOS speech settings, or select another installed voice with `--voice`.
 
@@ -36,7 +64,7 @@ brew install ffmpeg
 
 The full `requirements.txt` and Blender are needed only for the original template; follow [README.upstream.md](README.upstream.md) for that workflow.
 
-## Choose a script
+## Choose a script on macOS
 
 Build the native file-picker helper on your Mac:
 
@@ -48,7 +76,7 @@ Double-click **文案制作视频.app** in the project directory and select a sc
 
 Native helper compilation, process startup, and launcher call behavior have been checked. A complete manual click-through from the file picker to the opened video is still unverified. The command-line entry below runs the verified production pipeline directly.
 
-## Command-line workflow
+## macOS command-line workflow
 
 ```sh
 .venv/bin/python video.py make examples/文案示例.md
@@ -66,7 +94,7 @@ Native helper compilation, process startup, and launcher call behavior have been
 
 Edit scene titles, layout kinds, and display items while keeping the complete narration. To change narration, edit the source script and plan it again. Outputs live in isolated folders under `video_jobs/`; `--output-base` selects another location.
 
-## Scripts and images
+## Local scripts and images
 
 Use blank lines to separate ideas. Markdown also supports headings, lists, tables, and local images:
 
@@ -84,21 +112,26 @@ Relative image paths resolve from the script's directory. Absolute paths also wo
 
 ## Scope and validation
 
-Different topics, local images, special-character paths, cache reuse, and content changes have been exercised through real renders, full video decoding, and automated tests. This workflow does not create arbitrary real product geometry or filmed footage from a script. Supply the required media or design and verify additional illustrations separately. Extracted highlights are not a substitute for fact-checking the supplied copy.
+The browser workflow has been exercised with real Chinese FP32 model speech, MP4 export, script import, and image selection/association. Automated checks cover text preservation, timing, subtitles, speech orchestration, and stale-editor protection; browser and device support still depend on available model and encoding capabilities.
 
-The local workflow currently depends on macOS speech and native entry points; equivalent speech production has not been validated on Windows or Linux. The web edition is still in development, so this README does not claim browser production is available.
+The macOS local workflow has been tested with different topics, local images, special-character paths, cache reuse, content changes, full video decoding, and automated tests. It continues to depend on macOS speech and native entry points; equivalent Python speech production has not been validated on Windows or Linux.
+
+Neither edition creates arbitrary real product geometry or filmed footage from a script. Supply the required media or design and verify additional illustrations separately. Extracted highlights are not a substitute for fact-checking the supplied copy.
 
 ## Project files
 
 | Path | Purpose |
 |---|---|
+| `web/` | Browser editor, local Chinese model adapter, and video recorder |
+| [Browser guide](web/README.md) | Build, static hosting, usage, and browser limits |
 | `video.py` | Plan, render, and launch the local workflow |
 | `script_video/` | Parsing, rendering, speech, and native launcher source |
 | `tests/` | Text integrity, job isolation, and launcher behavior tests |
 | `examples/` | Ready-to-use example scripts |
 | [Chinese user guide](使用说明-文案制作视频.md) | Detailed script and usage guidance |
 | [Upstream documentation](README.upstream.md) | The original Blender template |
+| [TTS notices](THIRD_PARTY_TTS.md) | Browser speech dependencies, model, and vendored runtime notices |
 
 ## License and attribution
 
-Code remains under **GNU GPL v3.0**; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for attribution and dated modifications. Preserve the upstream [sound source notice](assets/sound/SOURCES.md) and the demo-image permission in the original documentation. Input media, system components, and any source material incorporated in a video retain their own applicable rights.
+Code remains under **GNU GPL v3.0**; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for attribution and dated modifications. Browser speech components and model resources retain their own licenses, recorded in [THIRD_PARTY_TTS.md](THIRD_PARTY_TTS.md). Preserve the upstream [sound source notice](assets/sound/SOURCES.md) and the demo-image permission in the original documentation. Input media, system components, and any source material incorporated in a video retain their own applicable rights.

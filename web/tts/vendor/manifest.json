@@ -1,0 +1,18 @@
+{
+  "package": "onnxruntime-web",
+  "version": "1.26.0-dev.20260416-b7804b056c",
+  "source": "https://registry.npmjs.org/onnxruntime-web/-/onnxruntime-web-1.26.0-dev.20260416-b7804b056c.tgz",
+  "files": [
+    {
+      "file": "ort-wasm-simd-threaded.asyncify.mjs",
+      "bytes": 47389,
+      "sha256": "5959c6733039619c9af710d8e1bae8d6e84402787990637be987c2b1bd6c5fa9"
+    },
+    {
+      "file": "ort-wasm-simd-threaded.asyncify.wasm",
+      "bytes": 23567050,
+      "sha256": "e0c0c6d3e73d43b8a249972f8358f845b08cc16fec3c80efafdf8bed40366786"
+    }
+  ],
+  "runtime_family": "WebGPU native EP / asyncify; must match ort.webgpu.bundle.min.mjs"
+}

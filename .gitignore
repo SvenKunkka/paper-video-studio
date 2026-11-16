@@ -15,6 +15,7 @@ script_video_integration_test/
 production/
 SCRIPT-VIDEO-QA.md
 SPEC-script-video.md
+SPEC-web.md
 setup-env.sh
 .DS_Store
 .env
