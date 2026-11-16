@@ -10,6 +10,8 @@ This project extends [shred-kit](https://github.com/amirmushichge/shred-kit) by 
 
 ## Browser edition
 
+[Open the hosted studio](https://paper-video-studio.yujianxi0.chatgpt.site). This instance currently requires its owner's ChatGPT account; the source repository is public, and you can also run or host your own copy using the instructions below.
+
 1. Paste a script, or choose a local `.txt`, `.md`, or `.markdown` file.
 2. Arrange the storyboard and edit each scene's title, complete narration, and layout. Add local images and associate them with scenes when needed.
 3. Generate Chinese speech locally, preview it, and export a video with burned-in subtitles.
