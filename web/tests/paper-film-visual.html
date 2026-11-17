@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>Paper film visual fixture</title>
+<style>html,body{margin:0;background:#eeece7}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"../node_modules/three/build/three.module.js"}}</script>
+<canvas id="sheet" width="1620" height="600"></canvas>
+<script type="module">
+import { drawPaperFilm, disposePaperFilm } from '../paper-film.js';
+const image = new Image(); image.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="#eeece7"/><circle cx="300" cy="300" r="210" fill="#ac1210"/><path d="M170 340L280 190L430 360" fill="none" stroke="#181716" stroke-width="55"/></svg>'); await image.decode();
+const canvas = document.createElement('canvas'), sheet = document.querySelector('#sheet'), ctx = sheet.getContext('2d');
+const settings = {width:324,height:576,paper:'#eeece7',ink:'#181716',accent:'#ac1210'};
+const scenes = [{id:'s001',index:0,title:'微动开关的工作原理',narration:'按压触动器，快动机构使触点迅速切换。三脚转换型仅为示例；实际引脚顺序应查看数据表。',image,start:0,end:8,duration:8}];
+for (const [i,time] of [0,1.4,3.7,4.7,7.7].entries()) {
+  drawPaperFilm(canvas,{scenes,settings},time); ctx.drawImage(canvas,i*324,0);
+  ctx.font='16px sans-serif'; ctx.fillStyle='#181716'; ctx.fillText(`${time.toFixed(1)} s`,i*324+12,594);
+}
+disposePaperFilm(canvas); document.documentElement.dataset.ready='true';
+</script>

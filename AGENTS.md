@@ -1,7 +1,26 @@
-# Paper Video Studio: local script-to-video workflow (2026-11-16)
+# Paper Video Studio: browser and local workflows (2026-11-17)
 
-For videos driven by supplied TXT or Markdown copy, use `video.py` and the workflow
-documented in `README.md`, `README.zh-CN.md`, and `使用说明-文案制作视频.md`.
+For the browser edition, follow `README.md`, `README.zh-CN.md`, and `web/README.md`.
+The public studio at https://paper-video-studio.yujianxi0.chatgpt.site needs no sign-in.
+The default is a Three.js three-dimensional paper film: poster tear, falling ribbons,
+shredder feed/cut, and reassembly. Each poster lasts at least eight seconds, with
+nominal phases 0–0.6, 0.6–2.6, 2.6–5.1, and 5.1–8 seconds. Longer narration stretches
+the scene. Procedural paper/machine effects are the default sound; Chinese narration
+and synchronized subtitles are optional. Do not download the roughly 370 MB speech
+resources until the user requests speech. Keep the earlier text/image explainer optional.
+
+Browser default export is frame-based Worker + OffscreenCanvas + WebCodecs + Mediabunny.
+It supports switching tabs while the page stays open; browser freezing/disposal,
+closing/reloading the page, and system sleep can suspend or terminate the job.
+Never promise completion after the page closes or uninterrupted frozen/sleep execution.
+The separate MediaRecorder compatibility action still needs foreground playback.
+Check actual WebGL 2, graphics acceleration, worker canvas, and encoder capabilities;
+do not describe the real-time browser renderer as identical to Blender ray tracing.
+Preserve the GPL/upstream notices and the Three.js/Mediabunny attribution in
+`THIRD_PARTY_MEDIA.md`, plus optional model/runtime notices in `THIRD_PARTY_TTS.md`.
+
+For the macOS local TXT/Markdown explainer, use `video.py` and the workflow documented
+in `README.md`, `README.zh-CN.md`, and `使用说明-文案制作视频.md`.
 The macOS file-picker helper is built from `script_video/build_native_launcher.py`;
 `选择文案制作视频.command` is an alternate entry with visible progress.
 Content-based, isolated jobs live in `video_jobs/` and are not source files.
@@ -18,8 +37,9 @@ Content-based, isolated jobs live in `video_jobs/` and are not source files.
 - Keep scripts and media local. Do not upload or publish user inputs as part of rendering.
 - Validate content-based cache isolation, complete narration, readable layouts, and the
   exported video's decoding. Distinguish automated tests from a manual GUI click-through.
-- The web edition is under development. Do not describe it as a completed feature until
-  the implementation and its applicable verification are complete.
+- Distinguish the browser paper film, optional narration, legacy explainer, macOS local
+  workflow, and original Blender template. Report the actual checks for each, without
+  extending one successful video/device test to untested browsers or lifecycle states.
 
 The original instructions below apply only when customizing the fixed eight-second
 Blender paper-shred template, documented separately in `README.upstream.md`.

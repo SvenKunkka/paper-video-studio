@@ -1,6 +1,9 @@
 /** Paper Video Studio — browser-only Canvas/Web Audio video engine.
  * AudioBuffers are supplied by TTS/import. System speech playback is never recorded.
  */
+import { drawPaperFilm } from './paper-film.js';
+import { makePaperPcm } from './paper-audio.js';
+
 const LEAD = 0.35;
 const TAIL = 0.65;
 const DEFAULTS = { width: 1080, height: 1920, fps: 30, paper: '#eeece7', ink: '#181716', accent: '#ac1210' };
@@ -29,7 +32,7 @@ function audioDuration(scene) {
 }
 
 /** Returns start/end times in seconds. Optional scene.cues are relative to its AudioBuffer. */
-export function estimateTimeline(scenes = []) {
+export function estimateTimeline(scenes = [], settings = {}) {
   if (!Array.isArray(scenes)) throw new Error('场景列表格式不正确。');
   const cues = [];
   let position = 0;
@@ -37,13 +40,13 @@ export function estimateTimeline(scenes = []) {
     const scene = { ...input };
     if (!KINDS.has(scene.kind)) throw new Error(`第 ${index + 1} 场的画面类型不受支持。`);
     const narration = String(scene.narration ?? '');
-    const audio = audioDuration(scene);
+    const audio = settings.voiceover === false ? 0 : audioDuration(scene);
     const requested = Number(scene.duration) || 0;
-    const estimatedVoice = narration.trim() ? Math.max(1.2, [...narration].length / 4.5) : 0;
-    const duration = Math.max(requested, audio ? LEAD + audio + TAIL : Math.max(3, LEAD + estimatedVoice + TAIL));
+    const estimatedVoice = settings.voiceover !== false && narration.trim() ? Math.max(1.2, [...narration].length / 4.5) : 0;
+    const duration = Math.max(settings.visualStyle === 'paper3d' ? 8 : 0, requested, audio ? LEAD + audio + TAIL : Math.max(3, LEAD + estimatedVoice + TAIL));
     if (!Number.isFinite(duration) || duration > 3600) throw new Error(`第 ${index + 1} 场时长超出支持范围。`);
     let captionCues = [];
-    if (narration.trim()) {
+    if (narration.trim() && settings.voiceover !== false) {
       if (Array.isArray(scene.cues) && scene.cues.length) {
         if (normalized(scene.cues.map(c => c.text).join('')) !== normalized(narration)) {
           throw new Error(`第 ${index + 1} 场字幕与旁白原文不一致，请重新生成配音。`);
@@ -167,7 +170,24 @@ export function drawFrame(canvas, { scenes = [], settings = {} }, time = 0) {
   if (canvas.height !== config.height) canvas.height = config.height;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('浏览器无法创建画面，请尝试最新版 Chrome、Edge 或 Safari。');
-  const timeline = estimateTimeline(scenes);
+  const timeline = estimateTimeline(scenes, config);
+  if (config.visualStyle === 'paper3d') {
+    const info = drawPaperFilm(canvas, { scenes: timeline.scenes, settings: config }, time);
+    const scene = timeline.scenes[info.sceneIndex];
+    const cue = scene?.captionCues.find(c => info.localTime >= c.start && info.localTime < c.end);
+    if (cue) {
+      const g = geometry(config), scale = Math.min(config.width / g.w, config.height / g.h);
+      ctx.save();
+      try {
+        ctx.setTransform(scale, 0, 0, scale, (config.width - g.w * scale) / 2, (config.height - g.h * scale) / 2);
+        const box = { ...g.captions, y: g.h * .855, h: g.h * .1 };
+        ctx.fillStyle = 'rgba(238,236,231,.94)';
+        ctx.fillRect(box.x - 22, box.y - 16, box.w + 44, box.h + 16);
+        textBlock(ctx, cue.text, box, config.ink, { max: 40, min: 26, center: true, name: '字幕' });
+      } finally { ctx.restore(); }
+    }
+    return info;
+  }
   const g = geometry(config);
   const scale = Math.min(config.width / g.w, config.height / g.h);
   ctx.save();
@@ -281,12 +301,19 @@ function selectRecorder(stream, settings) {
   throw new Error('此浏览器没有可用的视频编码器。请尝试最新版 Chrome、Edge 或 Safari。');
 }
 
+/** Default to frame-based worker encoding. Real-time recording is an explicit compatibility mode. */
+export async function exportVideo(options) {
+  if (options.settings?.exportMode === 'realtime') return exportRealtimeVideo(options);
+  const { exportOfflineVideo } = await import('./offline-export.js');
+  return exportOfflineVideo(options);
+}
+
 /** Export in real time. onProgress receives {progress,elapsed,duration,sceneIndex}.
  * settings.silent === true is required to intentionally omit missing narration audio.
  */
-export async function exportVideo({ canvas, scenes, settings = {}, onProgress = () => {}, signal }) {
+export async function exportRealtimeVideo({ canvas, scenes, settings = {}, onProgress = () => {}, signal }) {
   const config = getSettings(settings);
-  const timeline = estimateTimeline(scenes);
+  const timeline = estimateTimeline(scenes, config);
   if (!timeline.scenes.length) throw new Error('请先添加文案和分镜。');
   if (signal?.aborted) throw abortError();
   if (globalThis.document?.visibilityState === 'hidden') throw new Error('请切回此页面，再开始导出视频。');
@@ -296,12 +323,12 @@ export async function exportVideo({ canvas, scenes, settings = {}, onProgress = 
   const Context = globalThis.AudioContext || globalThis.webkitAudioContext;
   if (!Context) throw new Error('此浏览器不支持可导出的音频，请更换浏览器。');
   for (const scene of timeline.scenes) {
-    if (!config.silent && scene.narration.trim() && !scene.audioDuration) {
+    if (!config.silent && config.voiceover !== false && scene.narration.trim() && !scene.audioDuration) {
       throw new Error(`分镜“${scene.title}”还没有可导出的配音。请先生成或导入配音，或明确选择无声导出。`);
     }
     if (scene.audioDuration && typeof scene.audio.getChannelData !== 'function') throw new Error('配音不是有效的 AudioBuffer，请重新生成。');
   }
-  if (!config.silent && !timeline.scenes.some(s => s.audioDuration)) throw new Error('没有可导出的音轨，请先添加配音，或明确选择无声导出。');
+  if (!config.silent && !config.paperSound && !timeline.scenes.some(s => s.audioDuration)) throw new Error('没有可导出的音轨，请先添加配音，或选择纸张音效。');
   // Preflight every stage and subtitle while no recorder is running.
   for (const scene of timeline.scenes) {
     drawFrame(canvas, { scenes, settings: config }, scene.start + .31);
@@ -339,6 +366,12 @@ export async function exportVideo({ canvas, scenes, settings = {}, onProgress = 
       }
     }
     gain.gain.value = peak > 0 ? Math.min(1, .92 / peak) : 1;
+    let paperEffect;
+    if (!config.silent && config.paperSound) {
+      const pcm = makePaperPcm(timeline.scenes, { sampleRate: 48000, level: config.voiceover === false ? 1 : .4 });
+      paperEffect = audioContext.createBuffer(1, pcm.length, 48000);
+      paperEffect.copyToChannel(pcm, 0);
+    }
     gain.connect(destination);
     if (config.monitorAudio) gain.connect(audioContext.destination);
     canvasStream = canvas.captureStream(config.fps);
@@ -414,17 +447,21 @@ export async function exportVideo({ canvas, scenes, settings = {}, onProgress = 
         timing.startEventDelay = audioContext.currentTime - startedAt;
       };
       try {
+        notify(0);
         started = true; startedAt = audioContext.currentTime;
         // Schedule audio before start() so a delayed start event cannot delay speech.
         const silent = audioContext.createBufferSource();
         silent.buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
         silent.loop = true; silent.connect(gain); silent.start(startedAt); sources.push(silent);
-        if (!config.silent) for (const scene of timeline.scenes) {
+        if (!config.silent && config.voiceover !== false) for (const scene of timeline.scenes) {
           if (!scene.audioDuration) continue;
           const source = audioContext.createBufferSource(); source.buffer = scene.audio; source.connect(gain);
           source.start(startedAt + scene.audioStart); sources.push(source);
         }
-        notify(0);
+        if (paperEffect) {
+          const source = audioContext.createBufferSource(); source.buffer = paperEffect; source.connect(gain);
+          source.start(startedAt); sources.push(source);
+        }
         recorder.start(250);
         frameId = requestAnimationFrame(tick);
       } catch (error) { fail(new Error(`无法开始视频录制：${error.message}`)); }

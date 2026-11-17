@@ -23,6 +23,15 @@ The local workflow uses Python, Pillow, ffmpeg, and the host macOS speech engine
 
 Chinese speech generation and audible MP4 export have been exercised in a real browser. Speech model/voice resources are downloaded from Hugging Face for local inference; scripts and image contents are not uploaded. Third-party components and model files retain their own licenses, described in [THIRD_PARTY_TTS.md](THIRD_PARTY_TTS.md).
 
+## Browser paper-film changes by SvenKunkka — 2026-11-17
+
+- Made a Three.js three-dimensional paper film the browser default, inspired by the credited upstream sequence: poster tearing, falling ribbons, shredder feeding/cutting, and reassembly. Every poster runs for at least eight seconds; the earlier text/image explainer is still selectable.
+- Added original deterministic DSP effects for paper tearing, ribbon friction, machine cutting, and reassembly clicks. These effects are the default sound; Chinese narration and synchronized subtitles are optional and trigger the speech-model download only when requested.
+- Added frame-based export with a Dedicated Worker, OffscreenCanvas, WebCodecs, and Mediabunny. Tab switching is supported while the webpage stays open; page freezing/disposal, closing/reloading, and system sleep can interrupt the job. The separate MediaRecorder compatibility action still requires foreground playback.
+- Retained public no-sign-in static hosting and local handling of scripts/images. A 64-second 1080 × 1920 MP4 with 1,920 frames and 48 kHz stereo AAC passed full decoding in browser acceptance checks.
+
+Three.js (MIT) and Mediabunny (MPL-2.0) are unmodified dependencies with their own source and license notices in [THIRD_PARTY_MEDIA.md](THIRD_PARTY_MEDIA.md). The browser film is a real-time rendering implementation with different output from Blender ray tracing. The original Blender source and its notices remain available; this extension does not claim identical rendering quality.
+
 Code in this modified project remains available under the **GNU General Public License, version 3.0**. See [LICENSE](LICENSE) for the full license and warranty disclaimer. This notice does not replace or remove any upstream notices.
 
 ## Media and platform components
@@ -31,10 +40,13 @@ Code in this modified project remains available under the **GNU General Public L
 - The upstream demo image is the original author's render. Its permission to use it in videos made with the kit is preserved in the upstream documentation; this notice does not expand that permission.
 - System fonts, macOS voices, Blender, ffmpeg, Python, and third-party Python packages are not relicensed by this notice. Their own terms continue to apply.
 - Browser speech dependencies, Kokoro model/voice resources, and vendored ONNX Runtime files are covered by their upstream notices. See [THIRD_PARTY_TTS.md](THIRD_PARTY_TTS.md) and the license files under `web/tts/vendor/`; this project does not relicense them as GPL-only components.
+- Three.js and Mediabunny retain their respective MIT and MPL-2.0 terms. Versioned source and distributed notices are recorded in [THIRD_PARTY_MEDIA.md](THIRD_PARTY_MEDIA.md); this notice does not replace those terms.
 - User-supplied writing and images are not made GPL merely by being used as inputs. Rights in supplied media and any source material incorporated in a video remain applicable.
 
 ## 中文说明
 
 Paper Video Studio 基于 Amir Mushich 的 shred-kit 改造，保留上游来源、作者署名、GPL v3.0 许可及原模板文档。SvenKunkka 于 2026-11-16 增加本地文案制作、配音字幕、原生入口、缓存隔离、测试和双语说明，并改进原海报的中文排版。同日增加浏览器编辑器、本地中文模型配音、时间轴与字幕、横竖屏视频导出和下载，完成真实浏览器的中文配音与有声 MP4 验证。
 
-项目代码继续采用 GNU GPL v3.0；浏览器配音依赖、模型与运行时的许可见 `THIRD_PARTY_TTS.md`。原音效、演示图、系统组件、用户文案与图片的权利按上述各自说明处理。完整许可与无担保条款见 `LICENSE`。
+2026-11-17 将浏览器默认画面改为 Three.js 三维海报撕裂、纸带飘落、碎纸机切割和重组，每海报至少 8 秒；默认播放本项目程序合成的纸张与机器音效，中文解说及字幕可选。旧版图文讲解保留。新增 Worker、OffscreenCanvas、WebCodecs 和 Mediabunny 逐帧导出，网页保持打开时可切换标签页；冻结、关闭、刷新或休眠可能中断。兼容前台录制仍需保持前台。已完成一条 64 秒 1080 × 1920、1,920 帧、48 kHz 双声道 AAC 的 MP4 完整解码检查。浏览器实时三维实现不等同于 Blender 光线追踪效果。
+
+项目代码继续采用 GNU GPL v3.0；Three.js、Mediabunny 归属及许可见 [THIRD_PARTY_MEDIA.md](THIRD_PARTY_MEDIA.md)，可选浏览器配音依赖、模型与运行时的许可见 [THIRD_PARTY_TTS.md](THIRD_PARTY_TTS.md)。原音效、演示图、系统组件、用户文案与图片的权利按上述各自说明处理。完整许可与无担保条款见 `LICENSE`。

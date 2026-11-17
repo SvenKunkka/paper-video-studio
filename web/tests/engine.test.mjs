@@ -1,10 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 
 // The public site is plain ES modules and intentionally needs no Node package metadata.
-const source = await readFile(new URL('../engine.js', import.meta.url), 'utf8');
-const { estimateTimeline, makeSrt, exportVideo } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const { estimateTimeline, makeSrt, exportRealtimeVideo: exportVideo } = await import('../engine.js');
 
 test('audio length controls duration and preserves its complete final tail', () => {
   const buffer = { duration: 5.25 };
@@ -41,10 +39,10 @@ test('SRT keeps every cue and formats hours and milliseconds', () => {
   assert.throws(() => makeSrt([{ start: 2, end: 1, text: '无效' }]), /字幕时间无效/u);
 });
 
-test('a delayed recorder start event never moves speech or the timeline origin', async () => {
+test('effects are prepared before the shared origin and delayed recorder events never move it', async () => {
   const names = ['MediaRecorder', 'MediaStream', 'AudioContext', 'requestAnimationFrame', 'cancelAnimationFrame', 'document'];
   const saved = new Map(names.map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
-  let clock = 0, stoppedAt = 0, startEventAt = 0;
+  let clock = 0, stoppedAt = 0, startEventAt = 0, recorderStartedAt = 0;
   const sourceStarts = [];
   const track = kind => ({ kind, stop() {}, requestFrame() {} });
   const audioTrack = track('audio'), videoTrack = track('video');
@@ -61,7 +59,9 @@ test('a delayed recorder start event never moves speech or the timeline origin',
     close() { this.state = 'closed'; return Promise.resolve(); }
     createGain() { return { gain: { value: 1 }, connect() {}, disconnect() {} }; }
     createMediaStreamDestination() { return { stream: new Stream([audioTrack]), disconnect() {} }; }
-    createBuffer(channels, length, rate) { return { duration: length / rate }; }
+    createBuffer(channels, length, rate) {
+      return { duration: length / rate, copyToChannel() { clock += .75; } };
+    }
     createBufferSource() {
       return { connect() {}, disconnect() {}, stop() {}, start(time) { sourceStarts.push(time); } };
     }
@@ -71,9 +71,10 @@ test('a delayed recorder start event never moves speech or the timeline origin',
     state = 'inactive'; mimeType = 'video/mp4';
     start() {
       this.state = 'recording';
+      recorderStartedAt = clock;
       // Reproduce the observed browser case: capture has already started, but
       // the asynchronous notification arrives 1.2 seconds later.
-      setImmediate(() => { clock = 1.2; startEventAt = clock; this.onstart(); });
+      setImmediate(() => { clock = recorderStartedAt + 1.2; startEventAt = clock; this.onstart(); });
     }
     stop() {
       if (this.state === 'inactive') return;
@@ -94,14 +95,15 @@ test('a delayed recorder start event never moves speech or the timeline origin',
       cancelAnimationFrame(handle) { clearImmediate(handle); }, document: undefined });
     const result = await exportVideo({ canvas, scenes: [{ id: 'a', kind: 'text', title: '录制时钟', narration: '完整旁白。', items: [],
       audio: { duration: 2, numberOfChannels: 1, getChannelData: () => new Float32Array([.2, -.2]) } }],
-      settings: { width: 360, height: 640, fps: 30 } });
-    assert.equal(startEventAt, 1.2);
-    assert.deepEqual(sourceStarts, [0, .35]);
-    assert.ok(stoppedAt >= 3 && stoppedAt < 3.15, `stop=${stoppedAt}, not delayed to 4.2s`);
+      settings: { width: 360, height: 640, fps: 30, paperSound: true } });
+    assert.equal(recorderStartedAt, .75);
+    assert.equal(startEventAt, recorderStartedAt + 1.2);
+    assert.deepEqual(sourceStarts, [.75, 1.1, .75]);
+    assert.ok(stoppedAt >= recorderStartedAt + 3 && stoppedAt < recorderStartedAt + 3.15, `stop=${stoppedAt}`);
     assert.equal(result.plannedDuration, 3);
-    assert.equal(result.duration, stoppedAt);
+    assert.equal(result.duration, stoppedAt - recorderStartedAt);
     assert.equal(result.durationSource, 'recording-audio-clock');
-    assert.equal(result.timing.startEventDelay, 1.2);
+    assert.ok(Math.abs(result.timing.startEventDelay - 1.2) < 1e-10);
     assert.equal(result.extension, 'mp4');
   } finally {
     for (const [name, descriptor] of saved) {

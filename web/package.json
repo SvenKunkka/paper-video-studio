@@ -10,8 +10,10 @@
     "preview": "python3 -m http.server 8766 --directory dist --bind 127.0.0.1"
   },
   "dependencies": {
+    "@huggingface/transformers": "4.2.0",
     "@uzen/kokoro-js": "1.2.4",
-    "@huggingface/transformers": "4.2.0"
+    "mediabunny": "1.66.0",
+    "three": "0.187.0"
   },
   "devDependencies": {
     "esbuild": "0.28.2"
