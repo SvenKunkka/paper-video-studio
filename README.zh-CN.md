@@ -10,7 +10,7 @@
 
 ## 网页版
 
-[打开在线工具](https://paper-video-studio.yujianxi0.chatgpt.site)。此实例目前仅站点所有者可用，需使用对应 ChatGPT 账号登录；源码仓库公开，也可以按下方步骤自行运行或部署。
+[打开在线工具](https://paper-video-studio.yujianxi0.chatgpt.site)。网页公开可用，无需登录，也不需要 ChatGPT 账号；源码仓库同样公开，可以按下方步骤自行运行或部署。
 
 1. 粘贴文案，或选择本地 `.txt`、`.md`、`.markdown` 文件。
 2. 整理分镜，编辑各镜头的标题、完整旁白和画面类型；需要图片时，先添加图片，再关联到镜头。
